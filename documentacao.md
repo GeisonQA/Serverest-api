@@ -36,11 +36,11 @@ API base: [https://serverest.dev/](https://serverest.dev/)
 
 | ID   | Descrição                      | Entrada                     | Resultado Esperado |
 | ---- | ------------------------------ | --------------------------- | ------------------ |
-| CT06 | Criar usuário válido           | Nome, email e senha válidos | 201 Created        |
-| CT07 | Email duplicado                | Email já cadastrado         | 400 Bad Request    |
-| CT08 | Email inválido                 | Email fora do padrão        | 400 Bad Request    |
-| CT09 | Nome vazio                     | Nome em branco              | 400 Bad Request    |
-| CT10 | Senha vazia                    | Senha ausente               | 400 Bad Request    |
+| *CT06 | Criar usuário válido           | Nome, email e senha válidos | 201 Created        |
+| *CT07 | Email duplicado                | Email já cadastrado         | 400 Bad Request    |
+| *CT08 | Email inválido                 | Email fora do padrão        | 400 Bad Request    |
+| *CT09 | Nome vazio                     | Nome em branco              | 400 Bad Request    |
+| *CT10 | Senha vazia                    | Senha ausente               | 400 Bad Request    |
 | CT11 | Buscar usuário por ID válido   | ID existente                | 200 OK             |
 | CT12 | Buscar usuário por ID inválido | ID inexistente              | 400 Bad Request    |
 
