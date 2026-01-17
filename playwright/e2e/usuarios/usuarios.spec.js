@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { userPayload } from '../../support/factories/user'
 import { requisitionService } from '../../support/services/requisition'
+import { usuariosServices } from '../../support/services/requisition'
 
 test.describe('POST /usuarios', () => {
     let requisition;
@@ -9,8 +10,6 @@ test.describe('POST /usuarios', () => {
     })
 
     test('Deve permitir cadastrar um novo usuario', async ({ request }) => {
-
-
         const payloadDinamico = userPayload();
 
         const response = await requisition.requisition(payloadDinamico)
@@ -21,70 +20,48 @@ test.describe('POST /usuarios', () => {
         expect(body).toHaveProperty('_id')
         expect(body).not.toHaveProperty('password')
 
-
     })
 
     test('Não deve permitir cadastrar um usuário com email já existente', async ({ request }) => {
-
         const payloadDinamico = userPayload();
 
-        //Primeira condição: já ter um usuário cadastrado
         const preCondition = await requisition.requisition(payloadDinamico)
         expect(preCondition.status()).toBe(201);
 
-        //Segunda condição: tentar cadastrar o mesmo usuário novamente
         const response = await requisition.requisition(payloadDinamico)
         expect(response.status()).toBe(400)
 
         const body = await response.json();
-        expect(body).toHaveProperty('message', 'Este email já está sendo usado');
+        expect(body).toHaveProperty('message', 'Este email já está sendo usado')
 
     })
 
     test('Não deve permitir cadastrar um email inválido', async ({ request }) => {
+        const payloadDinamico = userPayload();
 
-        const payloadStatico = {
-            nome: 'Geison souza',
-            email: 'geison.souza$teste.com', //email inválido
-            password: 'teste123',
-            administrador: 'true'
-        }
-
-        const response = await requisition.requisition(payloadStatico)
+        const response = await requisition.requisition({ ...payloadDinamico, email: 'geison.souza$teste' })
         expect(response.status()).toBe(400)
 
         const body = await response.json();
-        expect(body).toHaveProperty('email', 'email deve ser um email válido');
+        expect(body).toHaveProperty('email', 'email deve ser um email válido')
 
     })
 
     test('Não deve permitir cadastrar sem informar nome', async ({ request }) => {
+        const payloadDinamico = userPayload();
 
-        const payloadStatico = {
-            nome: '',
-            email: 'geison.souza@teste',
-            password: 'teste123',
-            administrador: 'true'
-        }
-
-        const response = await requisition.requisition(payloadStatico)
+        const response = await requisition.requisition({ ...payloadDinamico, nome: '' })
         expect(response.status()).toBe(400)
 
         const body = await response.json();
-        expect(body).toHaveProperty('nome', 'nome não pode ficar em branco');
+        expect(body).toHaveProperty('nome', 'nome não pode ficar em branco')
 
     })
 
     test('Não deve permitir cadastrar sem informar senha', async ({ request }) => {
+        const payloadDinamico = userPayload();
 
-        const payloadStatico = {
-            nome: 'Geison souza',
-            email: 'geison.souza@teste',
-            password: '',
-            administrador: 'true'
-        }
-
-        const response = await requisition.requisition(payloadStatico)
+        const response = await requisition.requisition({ ...payloadDinamico, password: '' })
         expect(response.status()).toBe(400)
 
         const body = await response.json();
@@ -92,24 +69,49 @@ test.describe('POST /usuarios', () => {
 
     })
 
-
-
 })
 
 test.describe('GET /usuarios', () => {
+    let requisition;
+    test.beforeEach(({ request }) => {
+        requisition = usuariosServices(request);
+    })
 
-    test('Deve listar os usuarios cadastrados', async ({ request }) => {
+    test('Deve listar o usuario por ID válido', async ({ request }) => {
+        const payloadDinamico = userPayload()
 
-        const response = await request.get('https://serverest.dev/usuarios/')
-       
+        const createService = requisitionService(request);
+
+        const createResp = await createService.requisition(payloadDinamico);
+        expect(createResp.status()).toBe(201);
+
+        const createBody = await createResp.json();
+        const userId = createBody._id;
+
+        const response = await requisition.getUsuarioById(userId);
         expect(response.status()).toBe(200);
 
         const body = await response.json();
-        console.log(body);
-        expect(body).toHaveProperty('quantidade', body.quantidade);
-        expect(body).toHaveProperty('usuarios', body.usuarios);
-        expect(Array.isArray(body.usuarios)).toBeTruthy();
+        expect(body).toHaveProperty('_id', userId);
+        expect(body).toHaveProperty('nome', payloadDinamico.nome);
+        expect(body).toHaveProperty('email', payloadDinamico.email);
+
+
+
     })
+
+    test.only('Não deve listar o usuario por ID inválido', async ({ request }) => {
+
+        const invalidId = 'naSt3CW8S2xmXYxG'
+
+        const response = await requisition.getUsuarioById(invalidId)
+        expect(response.status()).toBe(400)
+
+        const body = response.json()
+        expect(body.message).toBe('Usuário não encontrado');
+
+    })
+
 
 
 });
